@@ -85,3 +85,5 @@ desktop.ini
 *.db
 *.pid
 *.seed
+# 流处理检查点持久化目录（运行时生成）
+backend/var/

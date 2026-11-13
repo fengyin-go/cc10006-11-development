@@ -5,14 +5,26 @@
 """
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
+from typing import AsyncIterator
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.routers import ROUTERS
+from app.services.checkpoint import checkpoint_service
 from app.store import store
 
-app = FastAPI(title="数据湖仓一体管理平台", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    """进程重启后先恢复检查点事实，再把水位同步到流作业与回填台账。"""
+    checkpoint_service.sync_all()
+    yield
+
+
+app = FastAPI(title="数据湖仓一体管理平台", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
